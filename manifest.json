@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "Archiv-Link für archive.today",
+  "short_name": "Archiv-Link",
+  "version": "1.0.0",
+  "description": "Öffnet Seiten und Links bei archive.today – nur auf Klick, ohne eigene Netzwerkzugriffe, mit Schutz vor Fremd-Code.",
+  "minimum_chrome_version": "110",
+
+  "permissions": ["activeTab", "contextMenus", "storage", "declarativeNetRequest"],
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Archiv-Link",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+
+  "commands": {
+    "open-newest": {
+      "suggested_key": { "default": "Alt+Shift+A" },
+      "description": "Neueste Archivkopie der aktuellen Seite öffnen"
+    }
+  },
+
+  "declarative_net_request": {
+    "rule_resources": [
+      { "id": "schutz", "enabled": true, "path": "rules/schutz.json" }
+    ]
+  },
+
+  "content_security_policy": {
+    "extension_pages": "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"
+  }
+}

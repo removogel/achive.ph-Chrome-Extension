@@ -1,0 +1,31 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "initiatorDomains": [
+        "archive.ph",
+        "archive.today",
+        "archive.is",
+        "archive.li",
+        "archive.md",
+        "archive.vn",
+        "archive.fo"
+      ],
+      "excludedRequestDomains": [
+        "archive.ph",
+        "archive.today",
+        "archive.is",
+        "archive.li",
+        "archive.md",
+        "archive.vn",
+        "archive.fo",
+        "google.com",
+        "gstatic.com",
+        "recaptcha.net",
+        "hcaptcha.com"
+      ]
+    }
+  }
+]

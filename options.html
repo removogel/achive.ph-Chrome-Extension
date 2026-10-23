@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Archiv-Link – Einstellungen</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="options.js"></script>
+</head>
+<body class="options">
+  <main>
+    <h1><img src="icons/icon-48.png" alt="" width="28" height="28"> Archiv-Link</h1>
+
+    <section>
+      <h2>Archivieren</h2>
+      <label class="row">
+        <span>Archiv-Domain</span>
+        <select id="mirror"></select>
+      </label>
+      <p class="hint">Alle Domains gehören zum selben Dienst. Wenn eine nicht erreichbar ist, nimm eine andere.</p>
+
+      <label class="check"><input type="checkbox" id="cleanUrl">
+        <span>Tracking-Parameter entfernen <small>(utm_…, fbclid, gclid …) – findet häufiger vorhandene Kopien</small></span>
+      </label>
+      <label class="check"><input type="checkbox" id="foreground">
+        <span>Archiv-Tab im Vordergrund öffnen</span>
+      </label>
+    </section>
+
+    <section>
+      <h2>Schutz</h2>
+      <label class="check"><input type="checkbox" id="protection">
+        <span>Fremd-Anfragen von archive.today-Seiten blockieren</span>
+      </label>
+      <p class="hint">Blockiert alles, was eine archive.*-Seite bei anderen Domains nachlädt – etwa den DDoS-Code der CAPTCHA-Seite oder Tracker. Ausgenommen sind nur die CAPTCHA-Anbieter (google.com, gstatic.com, recaptcha.net, hcaptcha.com), damit das CAPTCHA lösbar bleibt. Links in Archivkopien lassen sich weiterhin anklicken. Gilt auch, wenn du archive.today ohne diese Erweiterung aufrufst.</p>
+
+      <label class="check"><input type="checkbox" id="badge">
+        <span>Anzahl blockierter Anfragen am Symbol anzeigen</span>
+      </label>
+    </section>
+
+    <section>
+      <h2>Was diese Erweiterung tut – und was nicht</h2>
+      <ul>
+        <li>Sie öffnet archive.today nur, wenn du klickst, das Kontextmenü nutzt oder das Tastenkürzel drückst.</li>
+        <li>Sie liest keine Seiteninhalte, hat keine Host-Berechtigungen und keine Content-Scripts.</li>
+        <li>Sie stellt selbst keine Netzwerkverbindungen her (per Content Security Policy erzwungen).</li>
+        <li>Interne Adressen (localhost, Heimnetz, Intranet) und Zugangsdaten in URLs werden nie weitergegeben.</li>
+        <li>Tastenkürzel ändern: <code>chrome://extensions/shortcuts</code></li>
+      </ul>
+    </section>
+
+    <p class="saved" id="saved" aria-live="polite"></p>
+  </main>
+</body>
+</html>

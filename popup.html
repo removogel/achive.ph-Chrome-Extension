@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Archiv-Link</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="popup.js"></script>
+</head>
+<body class="popup">
+  <header>
+    <img src="icons/icon-32.png" alt="" width="20" height="20">
+    <span class="title">Archiv-Link</span>
+    <span class="mirror" id="mirror"></span>
+  </header>
+
+  <p class="target" id="target"></p>
+  <p class="error" id="error" hidden></p>
+
+  <div class="actions">
+    <button type="button" class="primary" data-mode="newest">Neueste Kopie öffnen</button>
+    <button type="button" data-mode="list">Alle Kopien anzeigen</button>
+    <button type="button" data-mode="submit">Jetzt archivieren</button>
+  </div>
+
+  <footer>
+    <span class="status" id="status"><span class="dot"></span><span id="status-text"></span></span>
+    <a href="options.html" id="options">Einstellungen</a>
+  </footer>
+</body>
+</html>
