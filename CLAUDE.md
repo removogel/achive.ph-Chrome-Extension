@@ -10,15 +10,21 @@ This extension exists because the official archive.today extension is not truste
 Security and minimal permissions are the main feature, so treat these as invariants:
 
 - Permissions are exactly `activeTab`, `contextMenus`, `storage`, `declarativeNetRequest`.
-  No `host_permissions`, no `content_scripts`, no `tabs`, no `scripting`, no
-  `web_accessible_resources`. Adding any of these needs an explicit request from the user.
-- No network code in extension JS: no `fetch`, `XMLHttpRequest`, `WebSocket`,
-  `sendBeacon`, `EventSource`, `importScripts`, `eval`, `new Function`. The only way an
-  address leaves the browser is `chrome.tabs.create` with an archive URL, after a user action.
-- The CSP in `manifest.json` (`default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; ...`)
-  must not be loosened. Consequences: no inline `<script>`, no `<style>`, no `style="..."`
-  or `on*=` attributes, no external resources (CDNs, web fonts). All JS and CSS live in
-  their own files.
+  `host_permissions` are exactly `https://<mirror>/*` for the seven entries in `MIRRORS`
+  (added in 1.1.0 at the user's request for the copy check). No other hosts, no
+  `content_scripts`, no `tabs`, no `scripting`, no `cookies`, no `web_accessible_resources`.
+  Adding any of these needs an explicit request from the user.
+- Network code exists in exactly one place: `findArchivedCopy()` in `lib.js`, a single GET
+  to `https://<mirror>/timemap/<url>`, triggered only from the popup after a user click and
+  only when the `autoOpen` setting is on. It evaluates only status, content type and the
+  final URL's host; the body is cancelled, never read, rendered or executed. No other
+  `fetch`, and nowhere `XMLHttpRequest`, `WebSocket`, `sendBeacon`, `EventSource`,
+  `importScripts`, `eval`, `new Function`. Apart from this check, the only way an address
+  leaves the browser is `chrome.tabs.create` with an archive URL, after a user action.
+- The CSP in `manifest.json` (`default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src <the seven archive origins>; ...`)
+  must not be loosened. `connect-src` lists exactly the `MIRRORS` origins. Consequences: no
+  inline `<script>`, no `<style>`, no `style="..."` or `on*=` attributes, no external
+  resources (CDNs, web fonts). All JS and CSS live in their own files.
 - `prepareUrl()` in `lib.js` must keep rejecting non-http(s) schemes, archive domains,
   and private/internal hosts, and must keep stripping credentials and the fragment.
 - The mirror setting is validated against `MIRRORS`; never build a URL from an
@@ -28,10 +34,10 @@ Security and minimal permissions are the main feature, so treat these as invaria
 
 | File | Role |
 |---|---|
-| `manifest.json` | Permissions, CSP, static DNR ruleset `schutz`, command `open-newest` (Alt+Shift+A) |
-| `lib.js` | Shared module: `MIRRORS`, `DEFAULTS`, `RULESET_ID`, `ERROR_TEXT`, `isArchiveHost`, `isPrivateHost`, `prepareUrl`, `buildArchiveUrl`, `getSettings`, `openInArchive` |
-| `background.js` | Service worker (`type: module`): context menu, keyboard command, badge options |
-| `popup.html` / `popup.js` | Toolbar popup with three actions and protection status |
+| `manifest.json` | Permissions, host access, CSP, static DNR ruleset `schutz`, command `_execute_action` (Alt+Shift+A opens the popup) |
+| `lib.js` | Shared module: `MIRRORS`, `DEFAULTS`, `RULESET_ID`, `CHECK_TIMEOUT_MS`, `ERROR_TEXT`, `isArchiveHost`, `isPrivateHost`, `prepareUrl`, `buildArchiveUrl`, `findArchivedCopy`, `getSettings`, `openInArchive` |
+| `background.js` | Service worker (`type: module`): context menus (page, link, action), badge options. No network code. |
+| `popup.html` / `popup.js` | Toolbar popup: copy check and direct jump, otherwise menu; protection status |
 | `options.html` / `options.js` | Settings page (opens in a tab), auto-saves to `chrome.storage.sync` |
 | `style.css` | Shared styles for popup and options, light/dark via `prefers-color-scheme` |
 | `rules/schutz.json` | Static `declarativeNetRequest` block rule |
@@ -43,17 +49,31 @@ Security and minimal permissions are the main feature, so treat these as invaria
   - `newest` → `https://<mirror>/newest/<url>`
   - `list` → `https://<mirror>/<url>`
   - `submit` → `https://<mirror>/?run=1&url=<encodeURIComponent(url)>`
+- Popup flow (`popup.js`): invalid/internal URL → error, buttons disabled, no request.
+  `autoOpen` off → three buttons, `newest` primary, no request. `autoOpen` on → spinner,
+  `findArchivedCopy()`:
+  - `found` (200, not `text/html`) → open `newest` in a new tab, close popup
+  - `none` (404) → notice plus `submit` (primary) and `list`
+  - `unknown` (CAPTCHA/429, `text/html`, timeout after `CHECK_TIMEOUT_MS`, offline, foreign
+    final host) → open `newest` anyway and let archive.today handle it in the tab
+  The primary button moves to the top via CSS `order`, not by reordering the DOM.
+- Context menu IDs are `<source>-<mode>` (`page-newest`, `link-submit`, `action-list`, …);
+  `source` `link` uses `info.linkUrl`, the others `info.pageUrl || tab.url`. The two
+  `action` entries (right-click on the icon) cover what the direct jump skips.
 - Tracking-parameter removal works on the raw query string so the encoding of the
   remaining parameters stays byte-identical. Keep the list in `TRACKING_EXACT` /
   `TRACKING_PREFIXES` conservative; a missed tracker is better than a broken URL.
-- Settings in `chrome.storage.sync`: `mirror`, `cleanUrl`, `foreground`, `badge`.
+- Settings in `chrome.storage.sync`: `mirror`, `autoOpen`, `cleanUrl`, `foreground`, `badge`
+  (all booleans default to `true`).
   The protection toggle is not stored there; it is the enabled state of the static
   ruleset (`chrome.declarativeNetRequest.updateEnabledRulesets`).
 - Protection rule: blocks every non-`main_frame` request whose initiator is an archive
   domain and whose target is not an archive domain or a CAPTCHA provider (google.com,
   gstatic.com, recaptcha.net, hcaptcha.com). Background: in January 2026 archive.today's
   CAPTCHA page ran JavaScript that made visitors' browsers flood a third-party blog.
-  The archive domain list in the rule must stay in sync with `MIRRORS` in `lib.js`.
+  The archive domain list in the rule must stay in sync with `MIRRORS` in `lib.js`, as must
+  `host_permissions` and the CSP `connect-src`. The extension's own copy check is not
+  affected by the rule (its initiator is the extension, not an archive domain).
 - Badge shows the per-tab count of blocked requests
   (`declarativeNetRequest.setExtensionActionOptions`).
 - Service-worker listeners are registered synchronously at top level (MV3 requirement).
@@ -75,10 +95,15 @@ There is no automated test suite in the repo. To verify changes:
 1. `node --check` on each JS file (ES modules with top-level await in `popup.js` / `options.js`).
 2. Load unpacked at `chrome://extensions`, check for errors on the extension card and in
    the service-worker console.
-3. Exercise popup buttons, both context-menu entries for page and link, and Alt+Shift+A,
-   including on `chrome://` and `localhost` pages (buttons must be disabled / nothing opens).
+3. Click the icon on a page that has a copy (direct jump), on one that has none (menu with
+   notice), and with `autoOpen` off (menu, no request in the popup's network panel).
+   Exercise the context-menu entries for page, link and icon, and Alt+Shift+A, including
+   on `chrome://` and `localhost` pages (buttons must be disabled / nothing opens).
 4. Open an archive.today page and confirm the badge counts blocked requests and the
    CAPTCHA still works.
+
+In Node tests, note that `AbortSignal.timeout` does not keep the event loop alive; a
+mocked fetch that waits for the abort needs a separate timer.
 
 When changing `rules/schutz.json`, use only documented `declarativeNetRequest` condition
 keys; an invalid static rule prevents the ruleset from loading.

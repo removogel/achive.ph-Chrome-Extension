@@ -19,6 +19,11 @@
       </label>
       <p class="hint">Alle Domains gehören zum selben Dienst. Wenn eine nicht erreichbar ist, nimm eine andere.</p>
 
+      <label class="check"><input type="checkbox" id="autoOpen">
+        <span>Beim Klick aufs Symbol direkt zur neuesten Kopie springen <small>– das Menü erscheint nur, wenn es noch keine Kopie gibt</small></span>
+      </label>
+      <p class="hint">Dafür fragt die Erweiterung nach deinem Klick bei archive.today nach, ob Kopien der Seite existieren. Ausgewertet wird nur, ob die Antwort „gefunden“ oder „nicht gefunden“ lautet; Inhalte von archive.today werden dabei weder angezeigt noch ausgeführt. Ist die Option aus, baut die Erweiterung keinerlei eigene Verbindungen auf.</p>
+
       <label class="check"><input type="checkbox" id="cleanUrl">
         <span>Tracking-Parameter entfernen <small>(utm_…, fbclid, gclid …) – findet häufiger vorhandene Kopien</small></span>
       </label>
@@ -43,10 +48,11 @@
       <h2>Was diese Erweiterung tut – und was nicht</h2>
       <ul>
         <li>Sie öffnet archive.today nur, wenn du klickst, das Kontextmenü nutzt oder das Tastenkürzel drückst.</li>
-        <li>Sie liest keine Seiteninhalte, hat keine Host-Berechtigungen und keine Content-Scripts.</li>
-        <li>Sie stellt selbst keine Netzwerkverbindungen her (per Content Security Policy erzwungen).</li>
+        <li>Sie liest keine Seiteninhalte und hat keine Content-Scripts.</li>
+        <li>Ihre einzige eigene Verbindung ist die Abfrage, ob eine Kopie existiert (siehe oben). Andere Ziele sperrt die Content Security Policy.</li>
         <li>Interne Adressen (localhost, Heimnetz, Intranet) und Zugangsdaten in URLs werden nie weitergegeben.</li>
-        <li>Tastenkürzel ändern: <code>chrome://extensions/shortcuts</code></li>
+        <li>Rechtsklick aufs Symbol: „Alle Kopien anzeigen“ und „Jetzt archivieren“ – auch wenn schon eine Kopie existiert.</li>
+        <li>Das Tastenkürzel (Standard <code>Alt+Shift+A</code>) wirkt wie ein Klick aufs Symbol. Ändern: <code>chrome://extensions/shortcuts</code></li>
       </ul>
     </section>
 

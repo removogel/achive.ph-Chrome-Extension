@@ -1,5 +1,5 @@
 // Gemeinsame Logik für Popup, Optionen und Service Worker.
-// Diese Datei macht keine Netzwerkzugriffe. Sie baut nur URLs und öffnet Tabs.
+// Einziger Netzwerkzugriff der Erweiterung ist findArchivedCopy() weiter unten.
 
 // Alle Domains gehören zum selben Dienst (archive.today).
 export const MIRRORS = Object.freeze([
@@ -14,6 +14,7 @@ export const MIRRORS = Object.freeze([
 
 export const DEFAULTS = Object.freeze({
   mirror: 'archive.ph',
+  autoOpen: true,   // Klick aufs Symbol springt direkt zur neuesten Kopie
   cleanUrl: true,   // Tracking-Parameter entfernen
   foreground: true, // Archiv-Tab im Vordergrund öffnen
   badge: true       // Zahl blockierter Fremd-Anfragen am Symbol zeigen
@@ -21,6 +22,9 @@ export const DEFAULTS = Object.freeze({
 
 // ID des statischen Regelsatzes aus manifest.json
 export const RULESET_ID = 'schutz';
+
+// Höchstens so lange wird auf archive.today gewartet
+export const CHECK_TIMEOUT_MS = 4000;
 
 export const ERROR_TEXT = Object.freeze({
   invalid: 'Für diesen Tab ist keine Webadresse verfügbar.',
@@ -124,10 +128,48 @@ export function buildArchiveUrl(mode, pageUrl, mirror) {
   }
 }
 
+// Fragt die Memento-TimeMap von archive.today, ob es Kopien einer Adresse gibt.
+// Das ist der einzige Netzwerkzugriff der Erweiterung, und er passiert nur nach einem
+// Klick aufs Symbol. Ausgewertet werden nur Statuscode und Content-Type; die Antwort
+// wird nicht gelesen, nicht angezeigt und nicht ausgeführt.
+// Ergebnis: 'found' | 'none' | 'unknown'
+export async function findArchivedCopy(pageUrl, mirror, timeoutMs = CHECK_TIMEOUT_MS) {
+  const host = MIRRORS.includes(mirror) ? mirror : DEFAULTS.mirror;
+  let res;
+  try {
+    res = await fetch(`https://${host}/timemap/${pageUrl}`, {
+      method: 'GET',
+      credentials: 'include', // ein im Browser gelöstes CAPTCHA gilt auch hier
+      cache: 'no-store',
+      redirect: 'follow',
+      referrerPolicy: 'no-referrer',
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+  } catch {
+    return 'unknown'; // offline, Zeitüberschreitung, gesperrt
+  }
+  // Inhalt nicht herunterladen
+  res.body?.cancel().catch(() => {});
+
+  let finalHost = '';
+  try {
+    finalHost = new URL(res.url).hostname;
+  } catch {
+    // leer lassen
+  }
+  if (!isArchiveHost(finalHost)) return 'unknown';
+  if (res.status === 404) return 'none';
+  const type = (res.headers.get('content-type') || '').toLowerCase();
+  // Eine HTML-Antwort ist hier keine TimeMap, sondern z. B. die CAPTCHA-Seite
+  if (res.ok && !type.includes('text/html')) return 'found';
+  return 'unknown';
+}
+
 export async function getSettings() {
   const stored = await chrome.storage.sync.get(DEFAULTS);
   return {
     mirror: MIRRORS.includes(stored.mirror) ? stored.mirror : DEFAULTS.mirror,
+    autoOpen: stored.autoOpen !== false,
     cleanUrl: stored.cleanUrl !== false,
     foreground: stored.foreground !== false,
     badge: stored.badge !== false

@@ -20,7 +20,7 @@ const select = $('mirror');
 for (const m of MIRRORS) select.add(new Option(m, m, false, m === settings.mirror));
 select.addEventListener('change', () => save({ mirror: select.value }));
 
-for (const key of ['cleanUrl', 'foreground', 'badge']) {
+for (const key of ['autoOpen', 'cleanUrl', 'foreground', 'badge']) {
   const box = $(key);
   box.checked = settings[key];
   box.addEventListener('change', () => save({ [key]: box.checked }));

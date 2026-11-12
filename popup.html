@@ -15,11 +15,13 @@
 
   <p class="target" id="target"></p>
   <p class="error" id="error" hidden></p>
+  <p class="checking" id="checking" hidden><span class="spinner"></span>Suche Archivkopie …</p>
+  <p class="notice" id="notice" hidden>Von dieser Seite gibt es noch keine Archivkopie.</p>
 
-  <div class="actions">
-    <button type="button" class="primary" data-mode="newest">Neueste Kopie öffnen</button>
-    <button type="button" data-mode="list">Alle Kopien anzeigen</button>
-    <button type="button" data-mode="submit">Jetzt archivieren</button>
+  <div class="actions" id="actions" hidden>
+    <button type="button" id="btn-newest">Neueste Kopie öffnen</button>
+    <button type="button" id="btn-list">Alle Kopien anzeigen</button>
+    <button type="button" id="btn-submit">Jetzt archivieren</button>
   </div>
 
   <footer>

@@ -2,7 +2,7 @@
 
 A small Chrome extension (Manifest V3) that opens the current page or a link on
 archive.today – a trustworthy replacement for the official extension.
-About 600 lines including HTML and CSS, no dependencies, no build step: you can review
+About 650 lines including HTML and CSS, no dependencies, no build step: you can review
 all of it yourself in a few minutes.
 
 The user interface is in German.
@@ -19,20 +19,26 @@ The user interface is in German.
 Updates: download the new version or run `git pull`, then click the reload icon on the
 extension's entry in `chrome://extensions`.
 
-When loading, Chrome notes that the extension can "block content on any page". This comes
-from the protection rule (see below); the rule only applies to requests that originate
-from archive.today pages.
+Chrome lists two permissions when loading: the extension can "block content on any page"
+(the protection rule, which only applies to requests made by archive.today pages) and
+"read and change your data on archive.ph, archive.today, …" (needed to ask archive.today
+whether a copy exists). Both are explained below.
 
 ## Usage
 
 | How | What it does |
 |---|---|
-| Click the icon | Popup with *Neueste Kopie öffnen* (open newest copy), *Alle Kopien anzeigen* (list all copies), *Jetzt archivieren* (archive now) |
-| Right-click a page / link | The same actions for the page or the link target |
-| `Alt+Shift+A` (`Option+Shift+A` on macOS) | Open the newest copy of the current page directly (change it at `chrome://extensions/shortcuts`) |
+| Click the icon | If archive.today already has a copy, the newest one opens right away. Otherwise a menu appears with *Jetzt archivieren* (archive now) and *Alle Kopien anzeigen* (list all copies). |
+| Right-click the icon | *Alle Kopien dieser Seite anzeigen* (list all copies) and *Diese Seite jetzt archivieren* (archive now) – e.g. to make a fresh copy when an older one exists |
+| Right-click a page / link | Open the newest copy, or archive now, for the page or the link target |
+| `Alt+Shift+A` (`Option+Shift+A` on macOS) | Same as clicking the icon (change it at `chrome://extensions/shortcuts`) |
+
+The direct jump can be switched off in the settings. The popup then always shows all three
+actions, and the extension makes no network requests of its own.
 
 URLs used (`<url>` = cleaned page address):
 
+- Copy check: `https://archive.ph/timemap/<url>` (Memento TimeMap: 200 = copies exist, 404 = none)
 - Newest copy: `https://archive.ph/newest/<url>`
 - All copies: `https://archive.ph/<url>`
 - Archive now: `https://archive.ph/?run=1&url=<url, encoded>` (same as the official bookmarklet)
@@ -50,11 +56,18 @@ archive.vn, archive.fo) can be changed in the settings.
 | `contextMenus` | Right-click menu entries |
 | `storage` | Your settings |
 | `declarativeNetRequest` | The protection rule |
+| Host access to the seven archive domains (https only) | The copy check |
 
-No host permissions, no content scripts, no access to page content, history, cookies or
-other tabs. The Content Security Policy (`default-src 'none'`) prevents the popup, the
-settings page and the service worker from opening connections themselves or loading
-third-party code. The extension hands over the address only by opening a new tab.
+No content scripts, no access to page content, history, cookies or other tabs.
+
+**The copy check.** When you click the icon, the extension sends one request to
+archive.today's TimeMap for the page you are on – the same address archive.today would get
+anyway when you open the copy. It only looks at the HTTP status and content type; the
+response is never read, displayed or executed, so no archive.today JavaScript runs. If the
+answer is unclear (CAPTCHA, timeout, offline), the extension simply opens the newest-copy
+URL and lets archive.today sort it out in the tab. The Content Security Policy
+(`default-src 'none'`, `connect-src` limited to the archive domains) prevents connections to
+anywhere else and blocks loading third-party code.
 
 Internal addresses (localhost, 10.x, 192.168.x, 172.16–31.x, `.local`, `fritz.box`,
 single-label hostnames, private IPv6) are never passed on, and neither are credentials
@@ -86,9 +99,9 @@ well.
 
 ```
 manifest.json      Permissions, CSP, ruleset, keyboard shortcut
-lib.js             URL checks, cleanup, archive URLs, opening tabs
-background.js      Context menu, keyboard shortcut, badge
-popup.html/.js     Popup
+lib.js             URL checks, cleanup, archive URLs, copy check, opening tabs
+background.js      Context menus, badge
+popup.html/.js     Popup: copy check, direct jump, menu
 options.html/.js   Settings
 style.css          Styling (light/dark)
 rules/schutz.json  Protection rule

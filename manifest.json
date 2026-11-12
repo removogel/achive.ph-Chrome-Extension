@@ -2,11 +2,21 @@
   "manifest_version": 3,
   "name": "Archiv-Link für archive.today",
   "short_name": "Archiv-Link",
-  "version": "1.0.0",
-  "description": "Öffnet Seiten und Links bei archive.today – nur auf Klick, ohne eigene Netzwerkzugriffe, mit Schutz vor Fremd-Code.",
+  "version": "1.1.0",
+  "description": "Öffnet Seiten und Links bei archive.today – mit einem Klick direkt zur neuesten Kopie, mit Schutz vor Fremd-Code.",
   "minimum_chrome_version": "110",
 
   "permissions": ["activeTab", "contextMenus", "storage", "declarativeNetRequest"],
+
+  "host_permissions": [
+    "https://archive.ph/*",
+    "https://archive.today/*",
+    "https://archive.is/*",
+    "https://archive.li/*",
+    "https://archive.md/*",
+    "https://archive.vn/*",
+    "https://archive.fo/*"
+  ],
 
   "background": {
     "service_worker": "background.js",
@@ -35,9 +45,8 @@
   },
 
   "commands": {
-    "open-newest": {
-      "suggested_key": { "default": "Alt+Shift+A" },
-      "description": "Neueste Archivkopie der aktuellen Seite öffnen"
+    "_execute_action": {
+      "suggested_key": { "default": "Alt+Shift+A" }
     }
   },
 
@@ -48,6 +57,6 @@
   },
 
   "content_security_policy": {
-    "extension_pages": "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"
+    "extension_pages": "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src https://archive.ph https://archive.today https://archive.is https://archive.li https://archive.md https://archive.vn https://archive.fo; base-uri 'none'; form-action 'none'"
   }
 }
