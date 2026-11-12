@@ -2,7 +2,7 @@
 
 A small Chrome extension (Manifest V3) that opens the current page or a link on
 archive.today – a trustworthy replacement for the official extension.
-About 650 lines including HTML and CSS, no dependencies, no build step: you can review
+About 700 lines including HTML and CSS, no dependencies, no build step: you can review
 all of it yourself in a few minutes.
 
 The user interface is in German.
